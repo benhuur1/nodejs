@@ -1,5 +1,6 @@
 import { createServer } from 'node:http'
 import { Router } from './router.mjs';
+import { customRequest } from './custom-request.mjs';
 
 const router = new Router();
 
@@ -15,21 +16,17 @@ router.get('/produto/notebook', (req, res) => {
     res.end('Produtos - Notebook')
 })
 
-router.post('/produto', (req, res) => {
-    res.end('Notebook Post')
-})
+function postProduto(req, res) {
+    const cor = req.query.get('cor')
+    res.end(`Notebook Post ${cor}`);
+}
 
-console.log(router.routes)
+router.post('/produto', postProduto)
 
-const server = createServer( async (req, res) => {
-    const url = new URL(req.url, 'http://localhost')
+const server = createServer( async (request, res) => {
+    const req =  await customRequest(request)
 
-    const chunks = []
-    for await (const chunk of req){
-        chunks.push(chunk)
-    }
-    const body = Buffer.concat(chunks).toString('utf-8');
-    const handler = router.find(req.method, url.pathname);
+    const handler = router.find(req.method, req.pathname);
     console.log(handler)
     if(handler){
         handler(req, res);
